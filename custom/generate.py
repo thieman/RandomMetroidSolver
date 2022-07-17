@@ -15,15 +15,93 @@ TARGET_PATH = "/run/media/mmcblk0p1/Emulation/roms/snes/Super_Metroid_VARIA/"
 SKILL_PRESET_PATH = "skill.json"
 ROM_PATH = "rom.sfc"
 PLAYLIST_PATH = "playlist.json"
+PATCHED_PLAYLIST_PATH = "playlist_patched.json"
 RANDO_PRESET_PATH = os.path.abspath("../rando_presets/default.json")
 
 PRESET_NAME = "TNTregular"
 
 
-def additional_params():
+def patch_music_json():
+    with open(PLAYLIST_PATH, "r") as f:
+        data = json.load(f)
+    mapping = {
+        "Titlesequenceintro": "Title sequence intro",
+        "Menutheme": "Menu theme",
+        "CrateriaLandingThunderZebesasleep": "Crateria Landing - Thunder, Zebes asleep",
+        "CrateriaLandingThunderZebesawake": "Crateria Landing - Thunder, Zebes awake",
+        "CrateriaLandingNoThunder": "Crateria Landing - No Thunder",
+        "CrateriaPirates": "Crateria Pirates",
+        "TourianEntrance": "Tourian Entrance",
+        "SamusTheme": "Samus Theme",
+        "GreenBrinstar": "Green Brinstar",
+        "RedBrinstar": "Red Brinstar",
+        "UpperNorfair": "Upper Norfair",
+        "LowerNorfair": "Lower Norfair",
+        "EastMaridia": "East Maridia",
+        "WestMaridia": "West Maridia",
+        "TourianBubbles": "Tourian Bubbles",
+        "MotherBrain2": "Mother Brain 2",
+        "EscapeSequence": "Escape Sequence",
+        "BossfightSporeSpawnBotwoon": "Boss fight - Botwoon",
+        "WreckedShipPoweroff": "Wrecked Ship - Power off",
+        "WreckedShipPoweron": "Wrecked Ship - Power on",
+        "EndingCredits": "Ending/Credits",
+        "MotherBrain3": "Mother Brain 3",
+    }
+
+    patched = {
+        "params": {"varia": True, "area": True, "boss": True},
+        "mapping": {},
+    }
+
+    for k, v in data.items():
+        if k in mapping:
+            patched["mapping"][mapping[k]] = v
+
+    with open(PATCHED_PLAYLIST_PATH, "w") as f:
+        json.dump(patched, f)
+
+
+def randomizer_params():
     return {
         "majorsSplit": "Full",
-        "music": PLAYLIST_PATH,
+        "progressionSpeed": "medium",
+        "progressionDifficulty": "normal",
+        "morphPlacement": "normal",
+        "startLocation": "random",
+        "maxDifficulty": "hardcore",
+        "suitsRestriction": True,
+        "missileQty": 3,
+        "superQty": 2,
+        "powerBombQty": 1,
+        "minorQty": 100,
+        "energyQty": "vanilla",
+        "objective": ["kill all G4"],
+        "tourian": "Vanilla",
+        "startLocationList": ",".join(
+            [
+                "Gauntlet Top",
+                "Green Brinstar Elevator",
+                "Big Pink",
+                "Etecoons Supers",
+                "Wrecked Ship Main",
+                "Firefleas Top",
+                "Business Center",
+                "Bubble Mountain",
+                "Mama Turtle",
+                "Watering Hole",
+                "Aqueduct",
+                "Red Brinstar Elevator",
+                "Golden Four",
+            ]
+        ),
+        "controls": "Y,B,A,X,Select,R,L",
+    }
+
+
+def customizer_params():
+    return {
+        "music": PATCHED_PLAYLIST_PATH,
         "sprite": random_samus_sprite(),
         "ship": random_ship_sprite(),
         "palette": True,
@@ -31,10 +109,13 @@ def additional_params():
         "max_degree": 90,
         "invert": True,
         "no_shift_suit_palettes": True,
-        "patch": ["refill_before_save.ips", "max_ammo_display.ips", "itemsounds.ips"],
-        "progressionSpeed": "medium",
-        "progressionDifficulty": "normal",
-        "morphPlacement": "normal",
+        "patch": [
+            "refill_before_save.ips",
+            "max_ammo_display.ips",
+            "itemsounds.ips",
+            "fast_doors.ips",
+            "elevators_speed.ips",
+        ],
     }
 
 
@@ -112,8 +193,24 @@ def clear_target():
 
 
 def randomize():
-    call = f"../randomizer.py -r {ROM_PATH} --param {SKILL_PRESET_PATH} --randoPreset {RANDO_PRESET_PATH}"
-    for k, v in additional_params().items():
+    call = f"../randomizer.py -r {ROM_PATH} --param {SKILL_PRESET_PATH}"
+    for k, v in randomizer_params().items():
+        if isinstance(v, bool):
+            call += f" --{k}"
+        elif isinstance(v, list):
+            for i in v:
+                call += f" --{k} '{i}'"
+        else:
+            call += f" --{k} '{v}'"
+    subprocess.check_call(call, shell=True)
+    for f in os.listdir():
+        if f.startswith("VARIA") and f.endswith(".sfc"):
+            return f
+
+
+def customize(rom_path):
+    call = f"../randomizer.py --rom {rom_path} --patchOnly"
+    for k, v in customizer_params().items():
         if isinstance(v, bool):
             call += f" --{k}"
         elif isinstance(v, list):
@@ -122,9 +219,7 @@ def randomize():
         else:
             call += f" --{k} {v}"
     subprocess.check_call(call, shell=True)
-    for f in os.listdir():
-        if f.startswith("VARIA") and f.endswith(".sfc"):
-            return f
+    os.rename("VARIA.sfc", rom_path)
 
 
 def upload():
@@ -139,11 +234,13 @@ def clean():
 
 
 def main():
+    patch_music_json()
     download_skill_preset()
     clear_target()
     dt = datetime.datetime.now().strftime("%Y%m%d")
     for idx in range(BATCH_SIZE):
         rom_path = randomize()
+        customize(rom_path)
         os.rename(rom_path, f"Super_VARIA_{dt}_{idx+1}.sfc")
     upload()
     clean()
