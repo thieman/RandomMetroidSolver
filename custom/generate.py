@@ -6,7 +6,7 @@ import random
 
 import requests
 
-BATCH_SIZE = 10
+BATCH_SIZE = 5
 
 TARGET_USER = "deck"
 TARGET_HOST = "deck.lan"
@@ -105,7 +105,7 @@ def customizer_params():
         "sprite": random_samus_sprite(),
         "ship": random_ship_sprite(),
         "palette": True,
-        "min_degree": 90,
+        "min_degree": -90,
         "max_degree": 90,
         "invert": True,
         "no_shift_suit_palettes": True,
@@ -223,7 +223,7 @@ def customize(rom_path):
 
 
 def upload():
-    call = f"rsync --delete --recursive Super_VARIA*.sfc {TARGET_USER}@{TARGET_HOST}:{TARGET_PATH}"
+    call = f"rsync --include='Super*.sfc' --exclude='*' --delete-before --recursive Super_VARIA*.sfc {TARGET_USER}@{TARGET_HOST}:{TARGET_PATH}"
     subprocess.check_call(call, shell=True)
 
 
@@ -236,6 +236,7 @@ def clean():
 def main():
     patch_music_json()
     download_skill_preset()
+    clean()
     clear_target()
     dt = datetime.datetime.now().strftime("%Y%m%d")
     for idx in range(BATCH_SIZE):
@@ -243,7 +244,6 @@ def main():
         customize(rom_path)
         os.rename(rom_path, f"Super_VARIA_{dt}_{idx+1}.sfc")
     upload()
-    clean()
 
 
 if __name__ == "__main__":

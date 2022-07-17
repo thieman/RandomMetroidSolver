@@ -1,13 +1,13 @@
 {
-  "Titlesequenceintro": "A Vision of Dark Secrets",
+  "Titlesequenceintro": "Halo Reach - Ashes",
   "Menutheme": "SM The Beginning",
   "CrateriaLandingThunderZebesasleep": "prime_crashedFrigate",
   "CrateriaLandingThunderZebesawake": "prime_crashedFrigate",
   "CrateriaLandingNoThunder": "prime_crashedFrigate",
-  "CrateriaPirates": "ssb64_planetZebes",
-  "TourianEntrance": "Tourian Entrance",
+  "CrateriaPirates": "m4_serris",
+  "TourianEntrance": "mad_nyanCat_1",
   "SamusTheme": "Halo - Skyline Were The Desperate Measures",
-  "GreenBrinstar": "Forest Temple",
+  "GreenBrinstar": "Halo Reach - Winter Contingency Bait and Switch",
   "RedBrinstar": "Metroid_Prime2_Echoes_-_Hydro_Dynamo",
   "UpperNorfair": "kottpower_uppernorfairambience",
   "LowerNorfair": "Stairway Boss",
@@ -20,5 +20,5 @@
   "WreckedShipPoweroff": "Save Room (Beta)",
   "WreckedShipPoweron": "Save Room (Beta)",
   "EndingCredits": "Ending/Credits",
-  "MotherBrain3": "Mother Brain 3"
+  "MotherBrain3": "Zeros Theme"
 }
